@@ -29,17 +29,17 @@ class ConcentrationRiskChecker
     return approved_result       if portfolio_total.zero?
 
     rule = ConcentrationRule.applicable_for(@state_code)
-    return missing_rule_result   if rule.nil?
+    return missing_rule_result if rule.nil?
 
-    projected_state_total   = state_total + @new_amount
+    projected_state_total = state_total + @new_amount
     projected_portfolio_total = portfolio_total + @new_amount
-    projected_pct           = projected_state_total / projected_portfolio_total
+    projected_pct = projected_state_total / projected_portfolio_total
 
     if projected_pct > rule.max_concentration_pct
       rejected_result(
-        state:         @state_code,
+        state: @state_code,
         projected_pct: projected_pct,
-        limit:         rule.max_concentration_pct
+        limit: rule.max_concentration_pct
       )
     else
       approved_result
@@ -66,23 +66,23 @@ class ConcentrationRiskChecker
   def rejected_result(state:, projected_pct:, limit:)
     Result.new(
       approved?: false,
-      reason:    "Limite de concentração excedido para #{state}: " \
-                 "#{format_pct(projected_pct)} projetado, " \
-                 "limite permitido é #{format_pct(limit)}"
+      reason: "Limite de concentração excedido para #{state}: " \
+              "#{format_pct(projected_pct)} projetado, " \
+              "limite permitido é #{format_pct(limit)}"
     )
   end
 
   def invalid_amount_result
     Result.new(
       approved?: false,
-      reason:    "Valor do empréstimo deve ser maior que zero"
+      reason: 'Valor do empréstimo deve ser maior que zero'
     )
   end
 
   def missing_rule_result
     Result.new(
       approved?: false,
-      reason:    "Nenhuma regra de concentração configurada para #{@state_code}"
+      reason: "Nenhuma regra de concentração configurada para #{@state_code}"
     )
   end
 
