@@ -15,6 +15,17 @@
 # Pode ser chamado independentemente de CreateLoan — útil para um
 # endpoint de simulação futuro: "esse empréstimo seria aprovado?"
 
+# Fórmula correta de concentração projetada:
+#
+#   concentração projetada = (estado_atual + novo_valor)
+#                            ─────────────────────────────────
+#                            (carteira_atual + novo_valor)
+#
+# Exemplo com carteira de R$ 1.000.000:
+#   SP atual:  R$ 150.000 (15% da carteira)
+#   Novo loan: R$ 100.000
+#   SP projetado: 250.000 / 1.100.000 = 22,7% → excede limite de 20% → REJEITA
+
 class ConcentrationRiskChecker
   # Contrato de retorno — imutável e explícito
   Result = Struct.new(:approved?, :reason, keyword_init: true)
