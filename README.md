@@ -1,75 +1,71 @@
 # README
 
-# Loan Risk — Controle de Risco de Concentração
+# Loan Risk — Concentration Risk Management
 
-API REST em Ruby on Rails para controle de risco de concentração geográfica
-em carteiras de empréstimo.
+REST API built with Ruby on Rails for managing geographic concentration risk in loan portfolios.
 
 ---
 
-## Decisões Técnicas
+## Technical Decisions
 
-### Linguagem e Framework
+### Language and Framework
 
 **Ruby on Rails 7.1 API-only.**
 
-- É uma stack que a empresa já usa e fácil para novos devs.
-- Rails tem convenções para modelagem de domínio, validações e persistência
-  perfeia para a arquiterura escolhida.
-- A flag `--api` gera um app enxuto para JSON adequado para a solução.
+* It is a technology stack already used by the company and is easy for new developers to adopt.
+* Rails provides conventions for domain modeling, validations, and persistence that are well suited to the chosen architecture.
+* The `--api` flag generates a lightweight JSON-focused application that is appropriate for this solution.
 
-### Banco de Dados
+### Database
 
 **PostgreSQL.**
 
-- Em transações finaceiras a prioridade é para a consistência dos dados em
-  detrimento a disponibilidade dos dados.
-- O cálculo de concentração geográfica precisa de transações ACID garantidas.
-- Bancos de dados relacionais são mais adequados aos princípios ACID.
-- PostgreSQL é adequado para sistemas que tendem a escalar.
-- O campo `amount` usa `decimal(15,2)` — nunca `float` para valores monetários,
-  pois float tem erros de arredondamento binário.
+* In financial transactions, data consistency is prioritized over data availability.
+* Geographic concentration calculations require guaranteed ACID transactions.
+* Relational databases are better suited to ACID principles.
+* PostgreSQL is well suited for systems that are expected to scale.
+* The `amount` field uses `decimal(15,2)` — never `float` for monetary values, as floating-point numbers can introduce binary rounding errors.
 
-### Arquitetura
+### Architecture
 
-**Domain-driven com Service Objects.**
+**Domain-driven architecture with Service Objects.**
 
-Implementa os requisitos de separação de responsabilidades, manutenção do código
-e evolução das regras de negócio.
+This approach addresses the requirements for separation of concerns, code maintainability, and the evolution of business rules.
 
-Separa o projeto em três camadas bem definidas:
+The project is divided into three clearly defined layers:
 
-```
-Controller  → lida com requisições
-Service     → aplica as regras de negócio
-Model       → valida os dados das entidades
+```text
+Controller  → handles requests
+Service     → applies business rules
+Model       → validates entity data
 ```
 
-### Regras como Dados
+### Rules as Data
 
-As regras de concentração geográfica estão no banco de dados e não no código.
-Alterar o limite, por exemplo, de SP de 20% para 30% é uma operação de dados —
-sem deploy. A tabela suporta `scope_type` e `scope_value` para receber regras
-futuras por região, produto ou qualquer outro critério.
+Geographic concentration rules are stored in the database rather than hardcoded in the application.
+
+For example, changing the concentration limit for São Paulo (SP) from 20% to 30% is a data operation — no deployment is required.
+
+The table supports `scope_type` and `scope_value`, allowing future rules to be defined by region, product, or any other criteria.
 
 ---
 
 ## Setup
 
 ```bash
-# Instalar dependências
+# Install dependencies
 bundle install
 
-# Criar banco de dados
+# Create the database
 rails db:create
 
-# Rodar migrations
+# Run migrations
 rails db:migrate
 
-# Popular regras iniciais
+# Seed initial rules
 rails db:seed
 
-# Iniciar servidor
+# Start the server
 rails server
 ```
 
@@ -77,16 +73,16 @@ rails server
 
 ## Endpoints
 
-### Criar empréstimo
+### Create a loan
 
-```
+```http
 POST /loans
 Content-Type: application/json
 
 { "amount": 10000, "state_code": "SP" }
 ```
 
-**Resposta 201 (aprovado):**
+**201 Response (approved):**
 
 ```json
 {
@@ -98,33 +94,33 @@ Content-Type: application/json
 }
 ```
 
-**Resposta 422 (rejeitado):**
+**422 Response (rejected):**
 
 ```json
 {
-  "error": "Limite de concentração excedido para SP: 25.0% projetado, limite permitido é 20.0%"
+  "error": "Concentration limit exceeded for SP: 25.0% projected, allowed limit is 20.0%"
 }
 ```
 
-### Listar empréstimos
+### List loans
 
-```
+```http
 GET /loans
 ```
 
-### Buscar empréstimo
+### Get a loan
 
-```
+```http
 GET /loans/:id
 ```
 
-### Concentração atual da carteira
+### Current portfolio concentration
 
-```
+```http
 GET /loans/concentration
 ```
 
-**Resposta:**
+**Response:**
 
 ```json
 {
@@ -143,13 +139,13 @@ GET /loans/concentration
 
 ---
 
-## Testes
+## Tests
 
 ```bash
-# Todos os testes
+# Run all tests
 bundle exec rspec
 
-# Por camada
+# Run tests by layer
 bundle exec rspec spec/models
 bundle exec rspec spec/services
 bundle exec rspec spec/requests
@@ -157,19 +153,190 @@ bundle exec rspec spec/requests
 
 ---
 
-## Premissas
+## Assumptions
 
-- O valor total da carteira é a soma de empréstimos com `status: "active"`
-- Empréstimos cancelados saem do cálculo de concentração
-- A regra mais específica tem precedência: regra por estado sobrepõe o default
-- Um empréstimo exatamente no limite (= 10%) é considerado aprovado
+* The total portfolio value is the sum of loans with `status: "active"`.
+* Cancelled loans are excluded from concentration calculations.
+* The most specific rule takes precedence: a state-specific rule overrides the default rule.
+* A loan exactly at the limit (= 10%) is considered approved.
 
 ---
 
-## O que evoluiria com mais tempo
+## What I Would Improve With More Time
 
-- Paginação em `GET /loans`
-- Rate limiting na API
-- Eventos de domínio (ex: `LoanCreated`) para integrações futuras
-- Cache do total da carteira com invalidação no create/cancel
-- Painel administrativo para gerenciar regras de concentração
+* Pagination for `GET /loans`
+* API rate limiting
+* Domain events (e.g., `LoanCreated`) for future integrations
+* Portfolio total caching with invalidation on loan creation/cancellation
+* Administrative dashboard for managing concentration rules
+
+
+# Loan Risk — Concentration Risk Management
+
+REST API built with Ruby on Rails for managing geographic concentration risk in loan portfolios.
+
+---
+
+## Technical Decisions
+
+### Language and Framework
+
+**Ruby on Rails 7.1 API-only.**
+
+* It is a technology stack already used by the company and is easy for new developers to adopt.
+* Rails provides conventions for domain modeling, validations, and persistence that are well suited to the chosen architecture.
+* The `--api` flag generates a lightweight JSON-focused application that is appropriate for this solution.
+
+### Database
+
+**PostgreSQL.**
+
+* In financial transactions, data consistency is prioritized over data availability.
+* Geographic concentration calculations require guaranteed ACID transactions.
+* Relational databases are better suited to ACID principles.
+* PostgreSQL is well suited for systems that are expected to scale.
+* The `amount` field uses `decimal(15,2)` — never `float` for monetary values, as floating-point numbers can introduce binary rounding errors.
+
+### Architecture
+
+**Domain-driven architecture with Service Objects.**
+
+This approach addresses the requirements for separation of concerns, code maintainability, and the evolution of business rules.
+
+The project is divided into three clearly defined layers:
+
+```text
+Controller  → handles requests
+Service     → applies business rules
+Model       → validates entity data
+```
+
+### Rules as Data
+
+Geographic concentration rules are stored in the database rather than hardcoded in the application.
+
+For example, changing the concentration limit for São Paulo (SP) from 20% to 30% is a data operation — no deployment is required.
+
+The table supports `scope_type` and `scope_value`, allowing future rules to be defined by region, product, or any other criteria.
+
+---
+
+## Setup
+
+```bash
+# Install dependencies
+bundle install
+
+# Create the database
+rails db:create
+
+# Run migrations
+rails db:migrate
+
+# Seed initial rules
+rails db:seed
+
+# Start the server
+rails server
+```
+
+---
+
+## Endpoints
+
+### Create a loan
+
+```http
+POST /loans
+Content-Type: application/json
+
+{ "amount": 10000, "state_code": "SP" }
+```
+
+**201 Response (approved):**
+
+```json
+{
+  "id": 1,
+  "amount": 10000.0,
+  "state_code": "SP",
+  "status": "active",
+  "created_at": "2024-01-01T10:00:00.000Z"
+}
+```
+
+**422 Response (rejected):**
+
+```json
+{
+  "error": "Concentration limit exceeded for SP: 25.0% projected, allowed limit is 20.0%"
+}
+```
+
+### List loans
+
+```http
+GET /loans
+```
+
+### Get a loan
+
+```http
+GET /loans/:id
+```
+
+### Current portfolio concentration
+
+```http
+GET /loans/concentration
+```
+
+**Response:**
+
+```json
+{
+  "portfolio_total": 100000.0,
+  "states": [
+    {
+      "state": "SP",
+      "amount": 60000.0,
+      "concentration": 60.0,
+      "limit": 20.0,
+      "within_limit": false
+    }
+  ]
+}
+```
+
+---
+
+## Tests
+
+```bash
+# Run all tests
+bundle exec rspec
+
+# Run tests by layer
+bundle exec rspec spec/models
+bundle exec rspec spec/services
+bundle exec rspec spec/requests
+```
+
+---
+
+## Assumptions
+
+* The total portfolio value is the sum of loans with `status: "active"`.
+* Cancelled loans are excluded from concentration calculations.
+* The most specific rule takes precedence: a state-specific rule overrides the default rule.
+* A loan exactly at the limit (= 10%) is considered approved.
+
+---
+
+## What I Would Improve With More Time
+
+* Pagination for `GET /loans`
+* API rate limiting
+* Domain events (e.g., `LoanCreated`) for future integrations
+* Portfolio total caching with invalidation on loan creation/cancellation
+* Administrative dashboard for managing concentration rules
