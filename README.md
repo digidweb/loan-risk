@@ -4,8 +4,6 @@
 
 Loan Risk is a backend application designed to evaluates and control new loans against **geographic concentration limits** defined for a loan portfolio.
 
-When a new loan is created, the API calculates its impact on the portfolio's geographic concentration and verifies whether the applicable concentration limit would be exceeded.
-
 The project focuses on backend engineering practices such as **domain-driven design, Service Objects, transactional consistency, configurable business rules, financial data modeling, and automated testing**.
 
 ## ✨ Features
@@ -44,7 +42,7 @@ The project focuses on backend engineering practices such as **domain-driven des
 
 * RSpec
 
-### Infrastructure
+### Infrastructure & Developement
 
 * Docker
 
@@ -183,36 +181,6 @@ The core business requirement is geographic concentration risk.
 
 When a new loan is created, the application evaluates how the loan would affect the portfolio's concentration in the corresponding state.
 
-New Loan
-   ↓
-Calculate projected portfolio
-   ↓
-Calculate geographic concentration
-   ↓
-Find applicable limit
-   ↓
-Within limit?
-   ├── Yes → Loan approved
-   └── No  → Loan rejected
-
-### Rules as Data
-
-Concentration limits are stored in the database rather than hard-coded in the application.
-
-This means a rule such as:
-
-São Paulo → 20%
-
-can be changed without modifying the business logic or deploying new application code.
-
-The rule structure also supports different scopes, allowing the system to evolve toward rules based on regions, products, or other business dimensions.
-
-### Financial Data Integrity
-
-Loan amounts are stored using PostgreSQL decimal(15,2) rather than floating-point values.
-
-This avoids the rounding problems associated with binary floating-point arithmetic and is appropriate for monetary values.
-
 ### Rule Precedence
 
 The application supports a default concentration rule and more specific rules.
@@ -225,7 +193,7 @@ Default rule
 
 This allows the risk policy to be configured without embedding every possible rule directly into the application code.
 
-## ⚙️ Business Rules as Data
+### Business Rules as Data
 
 A key design decision in Loan Risk is to store concentration rules in the database instead of hardcoding them in Ruby.
 
@@ -260,7 +228,7 @@ This allows the system to evolve toward rules based on other dimensions, such as
 * Portfolio
 * Other business criteria
 
-## 💵 Financial Data Modeling
+### Financial Data Modeling
 
 Monetary values are stored using:
 
@@ -280,15 +248,11 @@ For example, a monetary value such as:
 
 should be represented precisely rather than relying on floating-point arithmetic.
 
-## 🔒 Transactional Consistency
+### Transactional Consistency
 
-Loan creation and concentration validation are financial operations where consistency is critical.
-📊
-The application is designed around relational database guarantees and **ACID transactions** provided by PostgreSQL.
+Loan creation and concentration validation are financial operations where consistency is critical. The application is designed around relational database guarantees and **ACID transactions** provided by PostgreSQL.
 
 The goal is to ensure that the concentration check and the resulting persistence are handled consistently rather than allowing the portfolio state to become invalid between operations.
-
-
 
 ## 🔌 API
 
@@ -297,6 +261,24 @@ The goal is to ensure that the concentration check and the resulting persistence
 ```http
 POST /loans
 Content-Type: application/json
+
+{
+  "amount": 10000,
+  "state_code": "SP"
+}
+```
+
+If the new loan respects the applicable concentration limit, the API returns ```201 Created```.
+
+If the loan would exceed the limit, the API returns ``422 Unprocessable Entity`` with an explanatory error.
+
+Example:
+
+Example:
+```json
+{
+  "error": "Concentration limit exceeded for SP"
+}
 ```
 
 Request:
@@ -336,19 +318,19 @@ HTTP/1.1 422 Unprocessable Entity
 }
 ```
 
-## List loans
+### List loans
 
 ```http
 GET /loans
 ```
 
-## Get a loan
+### Get a loan
 
 ```http
 GET /loans/:id
 ```
 
-## Get current portfolio concentration
+### Get current portfolio concentration
 
 ```http
 GET /loans/concentration
@@ -370,7 +352,6 @@ Example response:
   ]
 }
 ```
-
 
 ## 🧪 Testing
 
@@ -411,7 +392,6 @@ HTTP Requests
 ```
 
 This helps ensure that both individual business rules and complete API flows are covered.
-
 
 ## 🚀 Getting Started
 
@@ -457,6 +437,8 @@ rails db:migrate
 rails db:seed
 ```
 
+The seed data creates the initial concentration rules.
+
 ### 6. Start the API
 
 ```bash
@@ -486,16 +468,6 @@ docker run -p 3000:3000 loan-risk
 ```
 
 For a complete production-like environment, PostgreSQL should be provided as a separate service/container and configured through environment variables.
-
-## 📊 Business Assumptions
-
-The application currently follows these rules:
-
-Only loans with active status are included in concentration calculations.
-Cancelled loans are excluded from the portfolio calculation.
-The most specific concentration rule takes precedence over the default rule.
-A loan exactly at the concentration limit is considered valid.
-Monetary values are persisted with decimal precision.
 
 ## ⚙️ Engineering Focus
 
