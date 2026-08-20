@@ -167,10 +167,10 @@ The application uses a domain-oriented architecture with **Service Objects** to 
 
 The main responsibility boundaries are:
 
-Controller → HTTP requests and responses
-Service → Business rules and risk calculation
-Model → Data integrity and validations
-Database → Persistent rules and loan data
+* Controller → HTTP requests and responses
+* Service → Business rules and risk calculation
+* Model → Data integrity and validations
+* Database → Persistent rules and loan data
 
 This separation makes the business logic easier to test, maintain, and evolve independently from the HTTP layer.
 
@@ -186,10 +186,11 @@ When a new loan is created, the application evaluates how the loan would affect 
 The application supports a default concentration rule and more specific rules.
 
 A more specific rule takes precedence over the default:
-
-Specific state rule
+```text
+Specific state rule       
         ↓
-Default rule
+  Default rule
+```
 
 This allows the risk policy to be configured without embedding every possible rule directly into the application code.
 
@@ -507,7 +508,7 @@ The project demonstrates practical experience with:
 Ruby on Rails · REST APIs · PostgreSQL · Active Record · Service Objects · Domain Modeling · RSpec · Docker
 
 More importantly, it demonstrates the ability to translate a business requirement into a maintainable backend architecture:
-
+```text
 Business requirement
         ↓
 Domain model
@@ -521,6 +522,6 @@ Database / Persistence
 API response
         ↓
 Automated tests
-
+```
 The project goes beyond basic CRUD by focusing on business rules, data integrity, separation of responsibilities, and testable application architecture.
 
