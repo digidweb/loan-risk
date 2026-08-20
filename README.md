@@ -2,7 +2,7 @@
 
 > A Ruby on Rails REST API for managing geographic concentration risk in loan portfolios.
 
-Loan Risk is a backend application designed to monitor and control **geographic concentration risk** in a loan portfolio.
+Loan Risk is a backend application designed to evaluates and control new loans against **geographic concentration limits** defined for a loan portfolio.
 
 When a new loan is created, the API calculates its impact on the portfolio's geographic concentration and verifies whether the applicable concentration limit would be exceeded.
 
@@ -10,28 +10,43 @@ The project focuses on backend engineering practices such as **domain-driven des
 
 ## ✨ Features
 
-* 💰 Create and manage loans
-* 🗺️ Monitor geographic concentration by state
+* 💰 Create and manage loans records
+* 🗺️ Calculate geographic concentration across the loan portfolio
 * ⚠️ Reject loans that would exceed concentration limits
-* 📊 Calculate the current concentration of the portfolio
-* ⚙️ Store concentration rules as database records instead of hardcoding them
-* 🔀 Support default and state-specific concentration rules
-* 💵 Use precise decimal types for monetary values
+* 📊 Expose current portfolio concentration through the API
+* ⚙️ Store concentration rules as database records 
+* 💵 Precise monetary calculations using PostgreSQL decimal
 * 🔒 Use database transactions for financial operations
 * 🧪 Automated tests with RSpec
 * 🏗️ Service Object architecture for business rules
+* 🐳 Docker support
 
 ## 🛠️ Tech Stack
 
-| Layer        | Technology                               |
-| ------------ | ---------------------------------------- |
-| Language     | Ruby                                     |
-| Framework    | Ruby on Rails 7.1                        |
-| Application  | Rails API-only                           |
-| Database     | PostgreSQL                               |
-| Testing      | RSpec                                    |
-| Architecture | Service Objects / Domain-oriented design |
-| API          | REST / JSON                              |
+### Backend
+
+* Ruby
+* Rails
+* Rails API-only
+* Active Record
+
+### Database
+
+* PostgreSQL
+
+### Architecture
+
+* Service Objects
+* Domain-driven design principles
+* REST API
+
+### Testing
+
+* RSpec
+
+### Infrastructure
+
+* Docker
 
 ## 🎯 Business Problem
 
@@ -74,10 +89,10 @@ When a loan is created, the system:
 New Loan
    │
    ▼
-Determine applicable rule
+Calculate projected portfolio
    │
    ▼
-Calculate projected portfolio concentration
+Calculate geographic concentration
    │
    ▼
 Compare against configured limit
@@ -102,6 +117,16 @@ status: "active"
 
 Cancelled loans are excluded from the portfolio concentration calculation.
 
+## 📋 Business Assumptions
+
+The application currently follows these business assumptions:
+
+* The total portfolio value is the sum of loans with `status: "active"`.
+* Only loans with `active` status are included in concentration calculations.
+* Cancelled loans are excluded from concentration calculations.
+* A state-specific concentration rule overrides the default rule.
+* A loan exactly at the configured concentration limit is considered approved.
+
 ## 🏗️ Architecture
 
 The application uses a domain-oriented architecture with **Service Objects** to keep business rules separate from controllers and persistence concerns.
@@ -115,32 +140,90 @@ The application uses a domain-oriented architecture with **Service Objects** to 
 ┌──────────────────────┐
 │      Controller      │
 │                      │
-│ Handles HTTP/JSON    │
+│  Handles HTTP/JSON   │
 └──────────┬───────────┘
            │
            ▼
 ┌──────────────────────┐
-│       Service        │
+│    Service Object    │
 │                      │
-│ Business rules       │
-│ Concentration logic  │
+│    Business rules    │
+│  Concentration logic │
 └──────────┬───────────┘
            │
            ▼
 ┌──────────────────────┐
 │        Models        │
 │                      │
-│ Validations          │
-│ Persistence          │
+│      Validations     |
+│      Associations    |    
 └──────────┬───────────┘
            │
            ▼
 ┌──────────────────────┐
-│      PostgreSQL      │
+│      PostgreSQL      |
+|                      |
+|     Persistence      │
 └──────────────────────┘
 ```
 
+The main responsibility boundaries are:
+
+Controller → HTTP requests and responses 
+Service → Business rules and risk calculation 
+Model → Data integrity and validations 
+Database → Persistent rules and loan data
+
 This separation makes the business logic easier to test, maintain, and evolve independently from the HTTP layer.
+
+## 🧠 Technical Highlights
+### Domain-driven business rules
+
+The core business requirement is geographic concentration risk.
+
+When a new loan is created, the application evaluates how the loan would affect the portfolio's concentration in the corresponding state.
+
+New Loan
+   ↓
+Calculate projected portfolio
+   ↓
+Calculate geographic concentration
+   ↓
+Find applicable limit
+   ↓
+Within limit?
+   ├── Yes → Loan approved
+   └── No  → Loan rejected
+
+### Rules as Data
+
+Concentration limits are stored in the database rather than hard-coded in the application.
+
+This means a rule such as:
+
+São Paulo → 20%
+
+can be changed without modifying the business logic or deploying new application code.
+
+The rule structure also supports different scopes, allowing the system to evolve toward rules based on regions, products, or other business dimensions.
+
+### Financial Data Integrity
+
+Loan amounts are stored using PostgreSQL decimal(15,2) rather than floating-point values.
+
+This avoids the rounding problems associated with binary floating-point arithmetic and is appropriate for monetary values.
+
+### Rule Precedence
+
+The application supports a default concentration rule and more specific rules.
+
+A more specific rule takes precedence over the default:
+
+Specific state rule
+        ↓
+Default rule
+
+This allows the risk policy to be configured without embedding every possible rule directly into the application code.
 
 ## ⚙️ Business Rules as Data
 
@@ -200,10 +283,12 @@ should be represented precisely rather than relying on floating-point arithmetic
 ## 🔒 Transactional Consistency
 
 Loan creation and concentration validation are financial operations where consistency is critical.
-
+📊
 The application is designed around relational database guarantees and **ACID transactions** provided by PostgreSQL.
 
 The goal is to ensure that the concentration check and the resulting persistence are handled consistently rather than allowing the portfolio state to become invalid between operations.
+
+
 
 ## 🔌 API
 
@@ -286,15 +371,6 @@ Example response:
 }
 ```
 
-## 📋 Assumptions
-
-The application currently follows these business assumptions:
-
-* The total portfolio value is the sum of loans with `status: "active"`.
-* Cancelled loans are excluded from concentration calculations.
-* The most specific rule takes precedence over the default rule.
-* A state-specific rule overrides the default rule.
-* A loan exactly at the configured concentration limit is considered approved.
 
 ## 🧪 Testing
 
@@ -336,46 +412,19 @@ HTTP Requests
 
 This helps ensure that both individual business rules and complete API flows are covered.
 
-## 📁 Project Structure
-
-```text
-app/
-├── controllers/
-│   └── ...              # HTTP/API layer
-│
-├── models/
-│   └── ...              # Domain entities and validations
-│
-└── services/
-    └── ...              # Business rules
-
-spec/
-├── models/
-│   └── ...              # Model specs
-│
-├── services/
-│   └── ...              # Business logic specs
-│
-└── requests/
-    └── ...              # API/request specs
-
-db/
-├── migrate/
-│   └── ...              # Database migrations
-│
-└── seeds.rb             # Initial concentration rules
-```
 
 ## 🚀 Getting Started
 
 ### Prerequisites
 
-Make sure you have the following installed:
+Make sure you have installed:
 
-* Ruby
+* Ruby 3.x
+* Rails 7.1
+* PostgreSQL 
 * Bundler
-* Ruby on Rails 7.1
-* PostgreSQL
+  
+Or run with Docker in a containerized environment.
 
 ### 1. Clone the repository
 
@@ -422,7 +471,7 @@ http://localhost:3000
 
 ## 🐳 Running with Docker
 
-The repository also includes a `Dockerfile` and Docker-related configuration.
+The repository also includes a `Dockerfile` for containerized development.
 
 Build the image:
 
@@ -438,40 +487,17 @@ docker run -p 3000:3000 loan-risk
 
 For a complete production-like environment, PostgreSQL should be provided as a separate service/container and configured through environment variables.
 
-## 💡 Technical Takeaways
+## 📊 Business Assumptions
 
-Loan Risk was designed to explore backend engineering problems that go beyond basic CRUD operations.
+The application currently follows these rules:
 
-The main concepts explored are:
+Only loans with active status are included in concentration calculations.
+Cancelled loans are excluded from the portfolio calculation.
+The most specific concentration rule takes precedence over the default rule.
+A loan exactly at the concentration limit is considered valid.
+Monetary values are persisted with decimal precision.
 
-* Designing a RESTful API with Rails API-only
-* Modeling a financial domain with PostgreSQL
-* Representing monetary values with precise decimal types
-* Separating business logic using Service Objects
-* Keeping business rules configurable as data
-* Applying database transactions to financial operations
-* Handling domain-specific validation and rejection
-* Testing models, services, and API requests with RSpec
-* Designing an architecture that can evolve as business rules become more complex
-
-## 🔮 Potential Improvements
-
-If continuing the project, the following improvements would be natural next steps:
-
-* Add pagination to `GET /loans`
-* Add API rate limiting
-* Introduce domain events such as `LoanCreated`
-* Add asynchronous processing where appropriate
-* Cache portfolio totals with proper invalidation
-* Add an administrative interface for managing concentration rules
-* Add API documentation with OpenAPI/SwaggerAproveite
-* Add authentication and authorization
-* Add database indexes for frequently queried fields
-* Add GitHub Actions for automated RSpec and RuboCop checks
-* Add production deployment and monitoring
-* Add structured logging and error tracking
-
-## 🎯 Engineering Focus
+## ⚙️ Engineering Focus
 
 The main purpose of this project is to demonstrate how a relatively simple business requirement can be translated into a maintainable backend architecture.
 
@@ -489,9 +515,42 @@ Database persistence
 
 This makes it possible to evolve the business rules without coupling them directly to the API controllers or database implementation.
 
-## 📄 Project Context
+## 🔮 Potential Improvements
 
-Loan Risk is a personal backend project created to practice Ruby on Rails API development and explore the design of systems involving financial business rules.
+If continuing the project, the following improvements would be:
 
-The project focuses particularly on **domain modeling, Service Objects, PostgreSQL transactions, configurable business rules, precise monetary values, and automated testing**.Aproveite
+* Add pagination to GET /loans
+* Add API authentication and authorization
+* Add rate limiting
+* Add domain events for integrations
+* Add caching for portfolio concentration calculations
+* Add an administrative interface for managing risk rules
+* Add GitHub Actions for automated tests and code quality checks
+* Add API documentation with OpenAPI/Swagger
+
+## 📌 Portfolio Context
+
+Loan Risk is part of a portfolio focused on Ruby on Rails backend and full-stack development.
+
+The project demonstrates practical experience with:
+
+Ruby on Rails · REST APIs · PostgreSQL · Active Record · Service Objects · Domain Modeling · RSpec · Docker
+
+More importantly, it demonstrates the ability to translate a business requirement into a maintainable backend architecture:
+
+Business requirement
+        ↓
+Domain model
+        ↓
+Business rules
+        ↓
+Service Object
+        ↓
+Database / Persistence
+        ↓
+API response
+        ↓
+Automated tests
+
+The project goes beyond basic CRUD by focusing on business rules, data integrity, separation of responsibilities, and testable application architecture.
 
