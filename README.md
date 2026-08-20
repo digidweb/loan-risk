@@ -167,10 +167,14 @@ The application uses a domain-oriented architecture with **Service Objects** to 
 
 The main responsibility boundaries are:
 
-Controller → HTTP requests and responses 
-Service → Business rules and risk calculation 
-Model → Data integrity and validations 
+Controller → HTTP requests and responses
+
+Service → Business rules and risk calculation
+
+Model → Data integrity and validations
+
 Database → Persistent rules and loan data
+
 
 This separation makes the business logic easier to test, maintain, and evolve independently from the HTTP layer.
 
@@ -455,13 +459,13 @@ http://localhost:3000
 
 The repository also includes a `Dockerfile` for containerized development.
 
-Build the image:
+### 1. Build the image:
 
 ```bash
 docker build -t loan-risk .
 ```
 
-Run the container:
+### 2. Run the container:
 
 ```bash
 docker run -p 3000:3000 loan-risk
