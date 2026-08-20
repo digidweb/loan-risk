@@ -79,7 +79,7 @@ The API therefore rejects the new loan because accepting it would violate the co
 
 This business rule is the core of the application.
 
-## :lock: Core Business Rule
+## 🛡️ Core Business Rule
 
 When a loan is created, the system:
 
