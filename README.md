@@ -2,9 +2,9 @@
 
 > A Ruby on Rails REST API for managing geographic concentration risk in loan portfolios.
 
-Loan Risk is a backend application designed to evaluates and control new loans against **geographic concentration limits** defined for a loan portfolio.
+Loan Risk is a backend application designed to evaluate and control new loans against **geographic concentration limits** defined for a loan portfolio.
 
-The project focuses on backend engineering practices such as **domain-driven design, Service Objects, transactional consistency, configurable business rules, financial data modeling, and automated testing**.
+The project focuses on backend engineering practices such as **Domain-Driven Design, Service Objects, Transactional Consistency, Configurable Business Rules, Financial Data Modeling, and Automated Testing**.
 
 ## ✨ Features
 
