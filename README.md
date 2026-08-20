@@ -31,9 +31,9 @@ The project focuses on backend engineering practices such as **Domain-Driven Des
 ### Database
 
 * PostgreSQL
-
+* 
 ### Architecture
-
+* 
 * Service Objects
 * Domain-driven design principles
 * REST API
@@ -505,7 +505,7 @@ Loan Risk is part of a portfolio focused on Ruby on Rails backend and full-stack
 
 The project demonstrates practical experience with:
 
-Ruby on Rails · REST APIs · PostgreSQL · Active Record · Service Objects · Domain Modeling · RSpec · Docker
+**Ruby on Rails · REST APIs · PostgreSQL · Active Record · Service Objects · Domain Modeling · RSpec · Docker**
 
 More importantly, it demonstrates the ability to translate a business requirement into a maintainable backend architecture:
 ```text
