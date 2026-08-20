@@ -168,13 +168,9 @@ The application uses a domain-oriented architecture with **Service Objects** to 
 The main responsibility boundaries are:
 
 Controller → HTTP requests and responses
-
 Service → Business rules and risk calculation
-
 Model → Data integrity and validations
-
 Database → Persistent rules and loan data
-
 
 This separation makes the business logic easier to test, maintain, and evolve independently from the HTTP layer.
 
@@ -275,8 +271,6 @@ Content-Type: application/json
 If the new loan respects the applicable concentration limit, the API returns ```201 Created```.
 
 If the loan would exceed the limit, the API returns ``422 Unprocessable Entity`` with an explanatory error.
-
-Example:
 
 Example:
 ```json
