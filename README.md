@@ -31,9 +31,9 @@ The project focuses on backend engineering practices such as **Domain-Driven Des
 ### Database
 
 * PostgreSQL
-* 
+  
 ### Architecture
-* 
+
 * Service Objects
 * Domain-driven design principles
 * REST API
